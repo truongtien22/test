@@ -1,23 +1,37 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, vec, Env, String, Vec};
 
-#[contract]
-pub struct Contract;
+use soroban_sdk::{contract, contractimpl, contracttype, Env};
 
-// This is a sample contract. Replace this placeholder with your own contract logic.
-// A corresponding test example is available in `test.rs`.
-//
-// For comprehensive examples, visit <https://github.com/stellar/soroban-examples>.
-// The repository includes use cases for the Stellar ecosystem, such as data storage on
-// the blockchain, token swaps, liquidity pools, and more.
-//
-// Refer to the official documentation:
-// <https://developers.stellar.org/docs/build/smart-contracts/overview>.
-#[contractimpl]
-impl Contract {
-    pub fn hello(env: Env, to: String) -> Vec<String> {
-        vec![&env, String::from_str(&env, "Hello"), to]
-    }
+#[contracttype]
+pub enum DataKey {
+    Counter,
 }
 
-mod test;
+#[contract]
+pub struct VisitCounter;
+
+#[contractimpl]
+impl VisitCounter {
+    pub fn increment(env: Env) -> u32 {
+        let count: u32 = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Counter)
+            .unwrap_or(0);
+
+        let new_count = count + 1;
+
+        env.storage()
+            .persistent()
+            .set(&DataKey::Counter, &new_count);
+
+        new_count
+    }
+
+    pub fn get_count(env: Env) -> u32 {
+        env.storage()
+            .persistent()
+            .get(&DataKey::Counter)
+            .unwrap_or(0)
+    }
+}
